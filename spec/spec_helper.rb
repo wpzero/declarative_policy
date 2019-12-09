@@ -2,6 +2,7 @@ require "bundler/setup"
 require "declarative_policy"
 require 'active_record'
 require "byebug"
+require "database_cleaner"
 
 $LOAD_PATH.unshift(File.expand_path(File.dirname(__FILE__) + '/../lib'))
 MODELS = File.join(File.dirname(__FILE__), 'models')
@@ -40,6 +41,14 @@ require File.join(SUPPORT, 'sqlite_seed.rb')
 RSpec.configure do |config|
   config.before(:suite) do
     Support::SqliteSeed.setup_db
+    DatabaseCleaner.strategy = :transaction
+    DatabaseCleaner.clean_with(:truncation)
     Support::SqliteSeed.seed_db
+  end
+
+  config.around(:each) do |example|
+    DatabaseCleaner.cleaning do
+      example.run
+    end
   end
 end
