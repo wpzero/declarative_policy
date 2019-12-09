@@ -3,6 +3,7 @@ require "declarative_policy/cache"
 require "declarative_policy/base"
 
 module DeclarativePolicy
+  class NoPolicyError < StandardError; end
   class Error < StandardError; end
   CLASS_CACHE_MUTEX = Mutex.new
   CLASS_CACHE_IVAR = :@__DeclarativePolicy_CLASS_CACHE
@@ -24,7 +25,7 @@ module DeclarativePolicy
         policy_class = "#{symbol.to_s.camelize}Policy".constantize
         return policy_class if policy_class < Base
       rescue NameError
-        nil
+        raise NoPolicyError, "No Policy for #{symbol}"
       end
     end
 
@@ -33,6 +34,7 @@ module DeclarativePolicy
         CLASS_CACHE_MUTEX.synchronize do
           break if klass.instance_variable_defined?(CLASS_CACHE_IVAR)
           policy_class = compute_klass_for_klass(klass)
+          raise NoPolicyError, "No Policy for #{klass}" if policy_class.nil?
           klass.instance_variable_set(CLASS_CACHE_IVAR, policy_class)
         end
       end
@@ -41,6 +43,8 @@ module DeclarativePolicy
 
     def compute_klass_for_klass(klass)
       klass.ancestors.each do |ancestor_klass|
+        # Can use declarative_policy_klass to set the policy type
+        return ancestor_klass.declarative_policy_klass if ancestor_klass.respond_to?(:declarative_policy_klass) && ancestor_klass.declarative_policy_klass < Base
         next unless ancestor_klass.name
         begin
           policy_class = "#{ancestor_klass.name}Policy".constantize
@@ -49,6 +53,7 @@ module DeclarativePolicy
           nil
         end
       end
+      nil
     end
   end
 end
