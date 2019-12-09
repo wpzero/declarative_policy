@@ -1,8 +1,10 @@
 module DeclarativePolicy
   module Cache
+    PREFIX = "__policy".freeze
+
     class << self
       def policy_key(user, subject)
-        "__policy/#{user_key(user)}/#{subject_key(subject)}"
+        "#{PREFIX}/#{user_key(user)}/#{subject_key(subject)}"
       end
 
       def subject_key(subject)
