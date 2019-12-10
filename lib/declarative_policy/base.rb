@@ -17,7 +17,7 @@ module DeclarativePolicy
         name = name.to_sym
         options = last_options!.merge(options)
         options[:context_key] = self.name
-        own_conditions[:name] = Condition.new(name, options, &compute)
+        own_conditions[name] = Condition.new(name, options, &compute)
       end
 
       def last_options!
@@ -31,7 +31,7 @@ module DeclarativePolicy
       end
 
       def desc(description)
-        @last_options[:description] = description
+        last_options[:description] = description
       end
     end
 
