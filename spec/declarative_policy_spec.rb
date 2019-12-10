@@ -32,7 +32,6 @@ RSpec.describe DeclarativePolicy do
   context ".policy_for" do
     context "when subject is not a symbol" do
       it "find policy through subject class name" do
-        expect(declarative_policy_project.class.instance_variable_get(DeclarativePolicy::CLASS_CACHE_IVAR)).to be_nil
         expect(DeclarativePolicy.policy_for(wp_user, declarative_policy_project)).to be_a(ProjectPolicy)
         expect(declarative_policy_project.class.instance_variable_get(DeclarativePolicy::CLASS_CACHE_IVAR)).to eq(ProjectPolicy)
       end

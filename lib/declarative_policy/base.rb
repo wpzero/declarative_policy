@@ -1,6 +1,47 @@
 module DeclarativePolicy
+  class AbilityMap
+    attr_reader :map
+
+    def initialize(map = {})
+      @map = map
+    end
+
+    def merge(other)
+      conflict_proc = proc { |key, my_val, other_val| (my_val + other_val).uniq }
+      AbilityMap.new(@map.merge(other.map, &conflict_proc))
+    end
+
+    def actions(key)
+      @map[key] ||= []
+    end
+
+    def enable(key, rule)
+      actions(key) << [:enable, rule]
+    end
+
+    def prevent(key, rule)
+      actions(key) << [:prevent, rule]
+    end
+  end
+
   class Base
     class << self
+      def own_ability_map
+        @own_ability_map ||= AbilityMap.new
+      end
+
+      def ability_map
+        if self == Base
+          own_ability_map
+        else
+          superclass.ability_map.merge(own_ability_map)
+        end
+      end
+
+      def configuration_for(ability)
+        ability_map.actions(ability)
+      end
+
       def conditions
         if self == Base
           own_conditions
@@ -33,6 +74,23 @@ module DeclarativePolicy
       def desc(description)
         last_options[:description] = description
       end
+
+      def rule(&block)
+        rule = RuleDsl.new(self).instance_eval(&block)
+        PolicyDsl.new(self, rule)
+      end
+
+      def enable_when(abilities, rule)
+        abilities.each do |ability|
+          own_ability_map.enable(ability, rule)
+        end
+      end
+
+      def prevent_when(abilities, rule)
+        abilities.each do |ability|
+          own_ability_map.prevent(ability, rule)
+        end
+      end
     end
 
     attr_accessor :user, :subject, :cache
@@ -49,7 +107,10 @@ module DeclarativePolicy
     end
 
     def allowed?(*abilities)
-      # TODO
+      # abilities.all? { |a| runner(a).pass? }
+    end
+
+    def runner(ability)
     end
 
     def policy_for(other_subject)
@@ -63,6 +124,16 @@ module DeclarativePolicy
 
     def cached?(key)
       @cache.key?(key)
+    end
+
+    def callable_condition(name)
+      name = name.to_sym
+      @_callable_conditions ||= {}
+      @_callable_conditions[name] ||=
+        begin
+          raise "invalid condition #{name}" unless self.class.conditions.key?(name)
+          CallableCondition.new(self, self.class.conditions[name])
+        end
     end
   end
 end

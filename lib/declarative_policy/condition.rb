@@ -36,5 +36,13 @@ module DeclarativePolicy
     def key
       @key ||= DeclarativePolicy::Cache.callable_condition_key(self)
     end
+
+    def score
+      return 0 if cached?
+      return condition.manual_score if condition.manual_score
+      return 2 if conditiion.scope == :global
+      return 16 if condition.scope == :normal
+      return 8
+    end
   end
 end
