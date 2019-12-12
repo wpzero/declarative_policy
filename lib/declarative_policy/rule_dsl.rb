@@ -87,7 +87,7 @@ module DeclarativePolicy
 
       def pass?(context)
         cached = cached_pass?(context)
-        return cached if cached_pass?(context) != :none
+        return cached if cached != :none
         @rules.all? { |r| r.pass?(context) }
       end
 
@@ -109,7 +109,7 @@ module DeclarativePolicy
 
       def pass?(context)
         cached = cached_pass?(context)
-        return cached unless cached != :none
+        return cached if cached != :none
         @rules.any? { |r| r.pass?(context) }
       end
 

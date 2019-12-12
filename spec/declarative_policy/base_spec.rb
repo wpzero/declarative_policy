@@ -73,12 +73,12 @@ RSpec.describe DeclarativePolicy::Base do
       DeclarativePolicy::AbilityMap.new
     end
 
-    let(:project_policy) do
+    let(:project_policy_class) do
       ProjectPolicy.clone
     end
 
     let(:rule_dsl) do
-      DeclarativePolicy::RuleDsl.new(project_policy)
+      DeclarativePolicy::RuleDsl.new(project_policy_class)
     end
 
     context "#enable" do
