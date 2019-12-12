@@ -107,10 +107,22 @@ module DeclarativePolicy
     end
 
     def allowed?(*abilities)
-      # abilities.all? { |a| runner(a).pass? }
+      abilities.all? { |a| runner(a).pass? }
     end
 
     def runner(ability)
+      ability = ability.to_sym
+      @__runners ||= {}
+      @__runners[ability] ||= begin
+                                own_runner = Runner.new(own_steps(ability))
+                                own_runner
+                              end
+    end
+
+    def own_steps(ability)
+      self.class.configuration_for(ability).map do |(action, rule)|
+        Step.new(self, action, rule)
+      end
     end
 
     def policy_for(other_subject)

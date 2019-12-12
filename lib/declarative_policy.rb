@@ -3,6 +3,7 @@ require "declarative_policy/cache"
 require 'declarative_policy/condition'
 require 'declarative_policy/rule_dsl'
 require 'declarative_policy/policy_dsl'
+require 'declarative_policy/runner'
 require "declarative_policy/base"
 
 module DeclarativePolicy

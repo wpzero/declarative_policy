@@ -181,7 +181,7 @@ RSpec.describe DeclarativePolicy::RuleDsl do
 
     before(:each) do
       project_policy_class.instance_eval do
-        desc "True conditiion"
+        desc "True condition"
         condition :true1 do
           true
         end
