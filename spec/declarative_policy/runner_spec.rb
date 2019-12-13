@@ -36,7 +36,7 @@ RSpec.describe DeclarativePolicy::Step do
   end
 
   let(:project_policy_class) do
-    ProjectPolicy.clone
+    clone_policy_klass(ProjectPolicy)
   end
 
   let(:user) do
@@ -213,7 +213,7 @@ RSpec.describe DeclarativePolicy::Step do
             end
             ability_step = DeclarativePolicy::Step.new(project_policy, :enable, ability_rule)
             expect(ability_step.flattened([]).count).to eq(2)
-            epxect(ability_step.flattened([]).map(&:action)).to match_array(:enable, :enable)
+            expect(ability_step.flattened([]).map(&:action)).to match_array([:enable, :enable])
           end
         end
 
@@ -224,7 +224,7 @@ RSpec.describe DeclarativePolicy::Step do
             end
             ability_step = DeclarativePolicy::Step.new(project_policy, :prevent, ability_rule)
             expect(ability_step.flattened([]).count).to eq(2)
-            epxect(ability_step.flattened([]).map(&:action)).to match_array(:prevent, :prevent)
+            expect(ability_step.flattened([]).map(&:action)).to match_array([:prevent, :prevent])
           end
         end
       end
@@ -353,7 +353,7 @@ RSpec.describe DeclarativePolicy::Runner do
   end
 
   let(:project_policy_class) do
-    ProjectPolicy.clone
+    clone_policy_klass(ProjectPolicy)
   end
 
   let(:user) do

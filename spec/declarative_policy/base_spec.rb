@@ -74,7 +74,7 @@ RSpec.describe DeclarativePolicy::Base do
     end
 
     let(:project_policy_class) do
-      ProjectPolicy.clone
+      clone_policy_klass(ProjectPolicy)
     end
 
     let(:rule_dsl) do

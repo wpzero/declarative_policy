@@ -11,35 +11,42 @@ RSpec.describe DeclarativePolicy::PolicyDsl do
     end
   end
 
-  let(:policy_dsl) do
-    DeclarativePolicy::PolicyDsl.new(project_policy_class, rule)
-  end
-
   let(:ability) do
     :spec_ability
   end
 
+
   context do
     let(:project_policy_class) do
-      ProjectPolicy.clone
+      clone_policy_klass(ProjectPolicy)
+    end
+
+    let(:policy_dsl) do
+      DeclarativePolicy::PolicyDsl.new(project_policy_class, rule)
     end
 
     it "enable successfully" do
-      policy_dsl.enable(ability)
-      expect(project_policy_class.own_ability_map.actions(ability).count).to eq (1)
-      expect(project_policy_class.own_ability_map.actions(ability).first.first).to eq(:enable)
+      expect {
+        policy_dsl.enable(ability)
+      }.to change{ project_policy_class.own_ability_map.actions(ability).count }.by(1)
+      expect(project_policy_class.own_ability_map.actions(ability).last.first).to eq(:enable)
     end
   end
 
   context do
     let(:project_policy_class) do
-      ProjectPolicy.clone
+      clone_policy_klass(ProjectPolicy)
+    end
+
+    let(:policy_dsl) do
+      DeclarativePolicy::PolicyDsl.new(project_policy_class, rule)
     end
 
     it "disable successfully" do
-      policy_dsl.prevent(ability)
-      expect(project_policy_class.own_ability_map.actions(ability).count).to eq (1)
-      expect(project_policy_class.own_ability_map.actions(ability).first.first).to eq(:prevent)
+      expect {
+        policy_dsl.prevent(ability)
+      }.to change { project_policy_class.own_ability_map.actions(ability).count }.by(1)
+      expect(project_policy_class.own_ability_map.actions(ability).last.first).to eq(:prevent)
     end
   end
 end

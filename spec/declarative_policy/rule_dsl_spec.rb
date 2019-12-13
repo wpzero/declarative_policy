@@ -2,7 +2,7 @@ require 'spec_helper'
 
 RSpec.describe DeclarativePolicy::RuleDsl do
   let(:project_policy_class) do
-    ProjectPolicy.clone
+    clone_policy_klass(ProjectPolicy)
   end
 
   let(:rule_dsl) do
@@ -72,7 +72,7 @@ RSpec.describe DeclarativePolicy::RuleDsl do
       end
 
       let(:project_policy_class) do
-        ProjectPolicy.clone
+        clone_policy_klass(ProjectPolicy)
       end
 
       let(:user) do
@@ -126,7 +126,7 @@ RSpec.describe DeclarativePolicy::RuleDsl do
     end
 
     let(:project_policy_class) do
-      ProjectPolicy.clone
+      clone_policy_klass(ProjectPolicy)
     end
 
     let(:user) do
@@ -268,7 +268,7 @@ RSpec.describe DeclarativePolicy::RuleDsl do
     end
 
     let(:project_policy_class) do
-      ProjectPolicy.clone
+      clone_policy_klass(ProjectPolicy)
     end
 
     let(:user) do

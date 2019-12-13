@@ -52,3 +52,10 @@ RSpec.configure do |config|
     end
   end
 end
+
+
+def clone_policy_klass(klass)
+  klass.clone.tap do |me|
+    me.instance_variable_set :@own_ability_map, klass.ability_map.clone
+  end
+end

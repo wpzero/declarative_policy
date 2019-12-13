@@ -10,6 +10,8 @@ module Support
         group1.users << user2
         project1 = Project.new(name: "declarative_policy", projectable: user1)
         project1.save
+        project1.issues.create(name: "issue1")
+        project1.issues.create(name: "issue2")
         project2 = Project.new(name: "btxl", projectable: group1)
         project2.save
       end
@@ -21,6 +23,11 @@ module Support
             t.column :name, :string
             t.column :projectable_type, :string
             t.column :projectable_id, :integer
+          end
+
+          create_table :issues do |t|
+            t.column :name, :string
+            t.column :project_id, :integer
           end
 
           create_table :users do |t|
