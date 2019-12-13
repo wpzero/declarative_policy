@@ -61,6 +61,63 @@ RSpec.describe DeclarativePolicy::RuleDsl do
         expect(rule.rule).to be_a(DeclarativePolicy::Rule::Condition)
       end
     end
+
+    context "create ability rule" do
+      let(:rule_dsl) do
+        DeclarativePolicy::RuleDsl.new(project_policy_class)
+      end
+
+      let(:project) do
+        Project.find_by_name "declarative_policy"
+      end
+
+      let(:project_policy_class) do
+        ProjectPolicy.clone
+      end
+
+      let(:user) do
+        User.find_by_name("wp")
+      end
+
+      let(:project_policy) do
+        project_policy_class.new(user, project)
+      end
+    end
+
+    before(:each) do
+      project_policy_class.instance_eval do
+        desc "True condition"
+        condition :true1 do
+          true
+        end
+
+        desc "True condition"
+        condition :true2 do
+          true
+        end
+
+        desc "False condition"
+        condition :false1 do
+          false
+        end
+
+        desc "False condition"
+        condition :false2 do
+          false
+        end
+
+        rule { true1 & true2 }.policy do
+          enable :true_ability
+        end
+      end
+    end
+
+    it "works" do
+      rule = rule_dsl.instance_eval do
+        can?(:true_ability)
+      end
+      expect(rule).to be_a(DeclarativePolicy::Rule::Ability)
+    end
   end
 
   context "Rule pass" do
@@ -158,6 +215,49 @@ RSpec.describe DeclarativePolicy::RuleDsl do
       it "works" do
         expect(true_rule.pass?(project_policy)).to be_truthy
         expect(false_rule.pass?(project_policy)).to be_falsey
+      end
+    end
+
+    context "Ability rule" do
+      before(:each) do
+        project_policy_class.instance_eval do
+          desc "True condition"
+          condition :true1 do
+            true
+          end
+
+          desc "True condition"
+          condition :true2 do
+            true
+          end
+
+          desc "False condition"
+          condition :false1 do
+            false
+          end
+
+          desc "False condition"
+          condition :false2 do
+            false
+          end
+
+          rule { true1 & true2 }.policy do
+            enable :true_ability
+          end
+
+          rule { true1 & false1 }.enable :false_ability
+        end
+      end
+
+      it "works" do
+        true_ability_rule = rule_dsl.instance_eval do
+          can? :true_ability
+        end
+        false_ability_rule = rule_dsl.instance_eval do
+          can? :false_ability
+        end
+        expect(true_ability_rule.pass?(project_policy)).to be_truthy
+        expect(false_ability_rule.pass?(project_policy)).to be_falsey
       end
     end
   end

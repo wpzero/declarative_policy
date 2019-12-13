@@ -62,6 +62,27 @@ module DeclarativePolicy
       end
     end
 
+    class Ability < Base
+      attr_reader :ability
+
+      def initialize(ability)
+        @ability = ability
+      end
+
+      def score(context)
+        context.runner(ability).score
+      end
+
+      def pass?(context)
+        context.runner(ability).pass?
+      end
+
+      def cached_pass?(context)
+        return context.runner(ability).pass? if context.runner(ability).cached?
+        :none
+      end
+    end
+
     class And < Base
       attr_reader :rules
 
@@ -176,6 +197,10 @@ module DeclarativePolicy
   class RuleDsl
     def initialize(context_class)
       @context_class = context_class
+    end
+
+    def can?(ability)
+      Rule::Ability.new(ability)
     end
 
     def all?(*rules)
