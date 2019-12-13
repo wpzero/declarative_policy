@@ -461,4 +461,234 @@ RSpec.describe DeclarativePolicy::Runner do
       end
     end
   end
+
+  context "#run" do
+    before(:each) do
+      project_policy_class.instance_eval do
+        desc "True condition"
+        condition :true1 do
+          true
+        end
+
+        desc "True condition"
+        condition :true2 do
+          true
+        end
+
+        desc "False condition"
+        condition :false1 do
+          false
+        end
+
+        desc "False condition"
+        condition :false2 do
+          false
+        end
+      end
+    end
+
+    context "One prevent step is passed, none enable step is passed" do
+      it "False" do
+        false_prevent_step = DeclarativePolicy::Step.new(project_policy,
+                                                        :prevent,
+                                                        rule_dsl.instance_eval {
+                                                          false1
+                                                        })
+        true_prevent_step = DeclarativePolicy::Step.new(project_policy,
+                                                        :prevent,
+                                                        rule_dsl.instance_eval {
+                                                          true1
+                                                        })
+        false_prevent_step2 = DeclarativePolicy::Step.new(project_policy,
+                                                        :prevent,
+                                                        rule_dsl.instance_eval {
+                                                          false1
+                                                        })
+        false_enable_step = DeclarativePolicy::Step.new(project_policy,
+                                                        :enable,
+                                                        rule_dsl.instance_eval {
+                                                          false1
+                                                        })
+        false_enable_step2 = DeclarativePolicy::Step.new(project_policy,
+                                                        :enable,
+                                                        rule_dsl.instance_eval {
+                                                          false2
+                                                        })
+        runner = DeclarativePolicy::Runner.new([
+                                                 false_prevent_step,
+                                                 true_prevent_step,
+                                                 false_prevent_step2,
+                                                 false_enable_step,
+                                                 false_enable_step2
+                                               ])
+        expect(runner.pass?).to be_falsey
+      end
+    end
+
+    context "One prevent step is passed, one enable step is passed" do
+      it "False" do
+        false_prevent_step = DeclarativePolicy::Step.new(project_policy,
+                                                        :prevent,
+                                                        rule_dsl.instance_eval {
+                                                          false1
+                                                        })
+        true_prevent_step = DeclarativePolicy::Step.new(project_policy,
+                                                        :prevent,
+                                                        rule_dsl.instance_eval {
+                                                          true1
+                                                        })
+        false_prevent_step2 = DeclarativePolicy::Step.new(project_policy,
+                                                        :prevent,
+                                                        rule_dsl.instance_eval {
+                                                          false1
+                                                        })
+        true_enable_step = DeclarativePolicy::Step.new(project_policy,
+                                                        :enable,
+                                                        rule_dsl.instance_eval {
+                                                          true1
+                                                        })
+        false_enable_step = DeclarativePolicy::Step.new(project_policy,
+                                                        :enable,
+                                                        rule_dsl.instance_eval {
+                                                          false2
+                                                        })
+        runner = DeclarativePolicy::Runner.new([
+                                                 false_prevent_step,
+                                                 true_prevent_step,
+                                                 false_prevent_step2,
+                                                 true_enable_step,
+                                                 false_enable_step
+                                               ])
+        expect(runner.pass?).to be_falsey
+      end
+    end
+
+    context "None prevent step is passed, none enable step is passed" do
+      it "False" do
+        false_prevent_step1 = DeclarativePolicy::Step.new(project_policy,
+                                                        :prevent,
+                                                        rule_dsl.instance_eval {
+                                                          false1
+                                                        })
+        false_prevent_step2 = DeclarativePolicy::Step.new(project_policy,
+                                                        :prevent,
+                                                        rule_dsl.instance_eval {
+                                                          false1
+                                                        })
+        false_enable_step1 = DeclarativePolicy::Step.new(project_policy,
+                                                        :enable,
+                                                        rule_dsl.instance_eval {
+                                                          false1
+                                                        })
+         false_enable_step2 = DeclarativePolicy::Step.new(project_policy,
+                                                        :enable,
+                                                        rule_dsl.instance_eval {
+                                                          false2
+                                                        })
+        runner = DeclarativePolicy::Runner.new([
+                                                 false_prevent_step1,
+                                                 false_prevent_step2,
+                                                 false_enable_step1,
+                                                 false_enable_step2
+                                               ])
+        expect(runner.pass?).to be_falsey
+      end
+    end
+
+    context "None prevent step is passed, one enable step is passed" do
+      it "True" do
+        false_prevent_step1 = DeclarativePolicy::Step.new(project_policy,
+                                                        :prevent,
+                                                        rule_dsl.instance_eval {
+                                                          false1
+                                                        })
+        false_prevent_step2 = DeclarativePolicy::Step.new(project_policy,
+                                                        :prevent,
+                                                        rule_dsl.instance_eval {
+                                                          false1
+                                                        })
+        true_enable_step = DeclarativePolicy::Step.new(project_policy,
+                                                        :enable,
+                                                        rule_dsl.instance_eval {
+                                                          true1
+                                                        })
+         false_enable_step2 = DeclarativePolicy::Step.new(project_policy,
+                                                        :enable,
+                                                        rule_dsl.instance_eval {
+                                                          false2
+                                                        })
+        runner = DeclarativePolicy::Runner.new([
+                                                 false_prevent_step1,
+                                                 false_prevent_step2,
+                                                 true_enable_step,
+                                                 false_enable_step2
+                                               ])
+        expect(runner.pass?).to be_truthy
+      end
+    end
+  end
+
+  context "#cached?" do
+    before(:each) do
+      project_policy_class.instance_eval do
+        desc "True condition"
+        condition :true1 do
+          true
+        end
+
+        desc "True condition"
+        condition :true2 do
+          true
+        end
+
+        desc "False condition"
+        condition :false1 do
+          false
+        end
+
+        desc "False condition"
+        condition :false2 do
+          false
+        end
+      end
+    end
+
+    it "work" do
+      false_prevent_step = DeclarativePolicy::Step.new(project_policy,
+                                                       :prevent,
+                                                       rule_dsl.instance_eval {
+                                                         false1
+                                                       })
+      true_prevent_step = DeclarativePolicy::Step.new(project_policy,
+                                                      :prevent,
+                                                      rule_dsl.instance_eval {
+                                                        true1
+                                                      })
+      false_prevent_step2 = DeclarativePolicy::Step.new(project_policy,
+                                                        :prevent,
+                                                        rule_dsl.instance_eval {
+                                                          false1
+                                                        })
+      false_enable_step = DeclarativePolicy::Step.new(project_policy,
+                                                      :enable,
+                                                      rule_dsl.instance_eval {
+                                                        false1
+                                                      })
+      false_enable_step2 = DeclarativePolicy::Step.new(project_policy,
+                                                       :enable,
+                                                       rule_dsl.instance_eval {
+                                                         false2
+                                                       })
+      runner = DeclarativePolicy::Runner.new([
+                                               false_prevent_step,
+                                               true_prevent_step,
+                                               false_prevent_step2,
+                                               false_enable_step,
+                                               false_enable_step2
+                                             ])
+      expect(runner.cached?).to be_falsey
+      runner.pass?
+      expect(runner.cached?).to be_truthy
+    end
+  end
 end
