@@ -172,8 +172,79 @@ RSpec.describe DeclarativePolicy::Step do
         DeclarativePolicy::Step.new(project_policy, :enable, or_rule)
       end
 
-      it "flatten or steps to multiple" do
+      it "flatten or steps to multiple steps" do
         expect(or_step.flattened([]).count).to eq(2)
+      end
+    end
+
+    context "Ability rule flatten" do
+      before(:each) do
+        project_policy_class.instance_eval do
+          desc "True condition"
+          condition :true1 do
+            true
+          end
+
+          desc "True condition"
+          condition :true2 do
+            true
+          end
+
+          desc "False condition"
+          condition :false1 do
+            false
+          end
+
+          desc "False condition"
+          condition :false2 do
+            false
+          end
+
+          rule { true1 }.enable :do_first_thing
+          rule { true2 }.enable :do_first_thing
+        end
+      end
+
+      context "When the ability step only contains enable steps" do
+        context "when the step is enable step" do
+          it "works" do
+            ability_rule = rule_dsl.instance_eval do
+              can?(:do_first_thing)
+            end
+            ability_step = DeclarativePolicy::Step.new(project_policy, :enable, ability_rule)
+            expect(ability_step.flattened([]).count).to eq(2)
+            epxect(ability_step.flattened([]).map(&:action)).to match_array(:enable, :enable)
+          end
+        end
+
+        context "when the step is prevent step" do
+          it "works" do
+            ability_rule = rule_dsl.instance_eval do
+              can?(:do_first_thing)
+            end
+            ability_step = DeclarativePolicy::Step.new(project_policy, :prevent, ability_rule)
+            expect(ability_step.flattened([]).count).to eq(2)
+            epxect(ability_step.flattened([]).map(&:action)).to match_array(:prevent, :prevent)
+          end
+        end
+      end
+
+      context "When the ability step only contains prevent steps" do
+        before(:each) do
+          project_policy_class.instance_eval do
+            rule { true1 }.enable :do_first_thing
+            rule { true2 }.enable :do_first_thing
+            rule { true1 }.prevent :do_first_thing
+          end
+        end
+
+        it "Just return [self]" do
+          ability_rule = rule_dsl.instance_eval do
+            can?(:do_first_thing)
+          end
+          ability_step = DeclarativePolicy::Step.new(project_policy, :prevent, ability_rule)
+          expect(ability_step.flattened([]).count).to eq(1)
+        end
       end
     end
   end

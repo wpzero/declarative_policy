@@ -161,14 +161,14 @@ module DeclarativePolicy
       case @rule
       when Rule::Or
         @rule.rules.flat_map { |r| Step.new(@context, r, @action).flattened(roots) }
-      # when Rule::Ability
-      #   steps = @context.runner(@rule.ability).steps.reject { |s| roots.include?(s) }
-      #   if steps.all?(&:enable?)
-      #     steps.map! { |s| s.with_action(:prevent) } if prevent?
-      #     steps.flat_map { |s| s.flattened(roots) }
-      #   else
-      #     [self]
-      #   end
+      when Rule::Ability
+        steps = @context.runner(@rule.ability).steps.reject { |s| roots.include?(s) }
+        if steps.all?(&:enable?)
+          steps.map! { |s| s.with_action(:prevent) } if prevent?
+          steps.flat_map { |s| s.flattened(roots) }
+        else
+          [self]
+        end
       else
         [self]
       end
