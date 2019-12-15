@@ -57,5 +57,7 @@ end
 def clone_policy_klass(klass)
   klass.clone.tap do |me|
     me.instance_variable_set :@own_ability_map, klass.ability_map.clone
+    me.instance_variable_set :@own_conditions, klass.own_conditions.clone
+    me.instance_variable_set :@own_delegations, klass.own_delegations.clone
   end
 end

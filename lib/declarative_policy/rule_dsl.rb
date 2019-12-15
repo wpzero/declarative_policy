@@ -49,16 +49,47 @@ module DeclarativePolicy
       end
 
       def score(context)
-        context.callable_condition(@name).score
+        context.callable_condition(name).score
       end
 
       def pass?(context)
-        context.callable_condition(@name).pass?
+        context.callable_condition(name).pass?
       end
 
       def cached_pass?(context)
-        return :none unless context.callable_condition(@name).cached?
-        context.callable_condition(@name).pass?
+        return :none unless context.callable_condition(name).cached?
+        context.callable_condition(name).pass?
+      end
+    end
+
+    class DelegatedCondition < Base
+      class MissingDelegate < StandardError; end
+
+      attr_reader :delegate_name, :name
+
+      def initialize(delegate_name, name)
+        @delegate_name = delegate_name
+        @name = name
+      end
+
+      def delegated_context(context)
+        raise MissingDelegate, "Missing delegated policy: #{delegate_name}" if !context.delegate_policies.key?(delegate_name)
+        context.delegate_policies[delegate_name]
+      end
+
+      def score(context)
+        delegated_context(context).callable_condition(name).score
+      rescue MissingDelegate
+        0
+      end
+
+      def pass?(context)
+        delegated_context(context).callable_condition(name).pass?
+      end
+
+      def cached_pass?(context)
+        return :none unless delegated_context(context).cached?
+        delegated_context(context).pass?
       end
     end
 
@@ -193,8 +224,21 @@ module DeclarativePolicy
     end
   end
 
-
   class RuleDsl
+    class DelegateDsl
+      attr_reader :rule_dsl, :delegate_name
+
+      def initialize(rule_dsl, delegate_name)
+        @rule_dsl = rule_dsl
+        @delegate_name = delegate_name
+      end
+
+      def method_missing(msg, *args)
+        return super unless args.empty? && !block_given?
+        rule_dsl.delegate(delegate_name, msg)
+      end
+    end
+
     def initialize(context_class)
       @context_class = context_class
     end
@@ -219,9 +263,17 @@ module DeclarativePolicy
       Rule::Condition.new(condition)
     end
 
+    def delegate(delegate_name, condition)
+      Rule::DelegatedCondition.new(delegate_name, condition)
+    end
+
     def method_missing(msg, *args)
       return super unless args.empty? && !block_given?
-      cond(msg.to_sym)
+      if @context_class.delegations.key?(msg)
+        DelegateDsl.new(self, msg)
+      else
+        cond(msg.to_sym)
+      end
     end
   end
 end

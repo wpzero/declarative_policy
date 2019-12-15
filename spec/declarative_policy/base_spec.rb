@@ -25,6 +25,18 @@ RSpec.describe DeclarativePolicy::Base do
     DeclarativePolicy.policy_for(wp, declarative_policy_project)
   end
 
+  let(:issue) do
+    Issue.find_by_name("issue1")
+  end
+
+  let(:issue_policy) do
+    DeclarativePolicy.policy_for(wp, issue)
+  end
+
+  let(:project_policy) do
+    DeclarativePolicy.policy_for(wp, declarative_policy_project)
+  end
+
   context ".condition" do
     it "create the condition and match the right desc" do
       expect(member_condition).to be_a(DeclarativePolicy::Condition)
@@ -143,6 +155,81 @@ RSpec.describe DeclarativePolicy::Base do
         merged_ability_map = ability_map.merge(other_ability_map)
         expect(merged_ability_map.actions(ability).count).to eq(2)
       end
+    end
+  end
+
+  context ".delegate" do
+    it "works" do
+      expect(IssuePolicy.delegations.values.count).to be > 0
+      expect(IssuePolicy.delegations.keys).to include(:project)
+    end
+  end
+
+  context ".delegate_policies" do
+    it "works" do
+      expect(issue_policy.delegate_policies.keys).to include(:project)
+      expect(issue_policy.delegate_policies[:project]).to be_a(ProjectPolicy)
+    end
+  end
+
+  context ".delegate_runners" do
+    it "Get all delegate runners" do
+      delegate_runners = issue_policy.delegate_runners(:edit_project)
+      expect(delegate_runners.count).to be > 0
+    end
+  end
+
+  context ".can?" do
+    let(:issue_policy_with_zkf) do
+      DeclarativePolicy.policy_for(zkf, issue)
+    end
+
+    context "can delegate to other policy ability" do
+      it "Works" do
+        expect(issue_policy.can?(:edit_project)).to be_truthy
+        expect(issue_policy_with_zkf.can?(:edit_project)).to be_falsey
+      end
+    end
+
+    context "can use policy self's ability setting" do
+      it "Works" do
+        expect(issue_policy.can?(:edit_issue)).to be_falsey
+        expect(issue_policy_with_zkf.can?(:edit_issue)).to be_truthy
+      end
+    end
+
+    context "can mix policy self ability setting and delegate policy ability when the ability name is same" do
+      it "Works" do
+        expect(project_policy.can?(:mix_delegate_action)).to be_truthy
+        expect(issue_policy.can?(:mix_delegate_action)).to be_falsey
+      end
+    end
+
+    context "delegated condition" do
+      it "Works" do
+        expect(issue_policy.can?(:destroy_issue)).to be_truthy
+        expect(issue_policy_with_zkf.can?(:destroy_issue)).to be_truthy
+      end
+    end
+
+    context "cache" do
+      it "Works" do
+        expect(issue_policy.can?(:destroy_issue)).to be_truthy
+        expect(issue_policy.instance_variable_get(:@__runners)[:destroy_issue]).to be_a(DeclarativePolicy::Runner)
+      end
+    end
+
+    context "ability rule" do
+      it "Works" do
+        runner = issue_policy.runner(:upload_image_from_issue)
+        expect(runner).to be_a(DeclarativePolicy::Runner)
+        expect(runner.steps.count).to eq(1)
+        ability_step = runner.steps.first
+        expect(ability_step).to be_a(DeclarativePolicy::Step)
+        expect(ability_step.rule).to be_a(DeclarativePolicy::Rule::Ability)
+        expect(issue_policy.can?(:upload_image_from_issue)).to be_falsey
+        expect(issue_policy_with_zkf.can?(:upload_image_from_issue)).to be_truthy
+       end
     end
   end
 end

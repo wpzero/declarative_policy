@@ -71,7 +71,6 @@ module DeclarativePolicy
 
     def steps_by_score
       flatten_steps!
-
       if @steps.size > 50
         warn "DeclarativePolicy: large number of steps (#{steps.size}), falling back to static sort"
         @steps.map { |s| [s.score, s] }.sort_by { |(score, _)| score }.each do |(score, step)|
@@ -160,7 +159,7 @@ module DeclarativePolicy
     def flattened(roots)
       case @rule
       when Rule::Or
-        @rule.rules.flat_map { |r| Step.new(@context, r, @action).flattened(roots) }
+        @rule.rules.flat_map { |r| Step.new(@context, @action, r).flattened(roots) }
       when Rule::Ability
         steps = @context.runner(@rule.ability).steps.reject { |s| roots.include?(s) }
         if steps.all?(&:enable?)

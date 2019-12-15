@@ -10,4 +10,13 @@ class ProjectPolicy < BasePolicy
       subject.projectable.is_a?(Group) &&
       subject.projectable.users.where(id: user.id).exist?
   end
+
+  rule { owner }.policy do
+    enable :destroy_project
+    enable :edit_project
+  end
+
+  rule { global_always_true }.policy do
+    enable :mix_delegate_action
+  end
 end

@@ -68,7 +68,7 @@ module DeclarativePolicy
       end
 
       def last_options
-        @last_options ||= {}.with_indifferent_access
+        @last_options ||= {}
       end
 
       def desc(description)
@@ -90,6 +90,34 @@ module DeclarativePolicy
         abilities.each do |ability|
           own_ability_map.prevent(ability, rule)
         end
+      end
+
+      def delegations
+        if self == Base
+          own_delegations
+        else
+          superclass.delegations.merge(own_delegations)
+        end
+      end
+
+      def own_delegations
+        @own_delegations ||= {}
+      end
+
+      def delegate(name = nil, &blk)
+        if name.nil?
+          @delegate_name_counter ||= 0
+          @delegate_name_counter += 1
+          name = :"anonymous_#{@delegate_name_counter}"
+        end
+
+        name = name.to_sym
+
+        if blk.nil?
+          blk = proc { @subject.__send__(name) }
+        end
+
+        own_delegations[name] = blk
       end
     end
 
@@ -115,7 +143,7 @@ module DeclarativePolicy
       @__runners ||= {}
       @__runners[ability] ||= begin
                                 own_runner = Runner.new(own_steps(ability))
-                                own_runner
+                                delegate_runners(ability).inject(own_runner, &:merge_runner)
                               end
     end
 
@@ -146,6 +174,30 @@ module DeclarativePolicy
           raise "invalid condition #{name}" unless self.class.conditions.key?(name)
           CallableCondition.new(self, self.class.conditions[name])
         end
+    end
+
+    def delegate_policies
+      @delegated_policies ||= self.class.delegations.transform_values do |blk|
+        new_subject = subject.instance_eval(&blk)
+        next if new_subject.nil?
+        policy_for(new_subject)
+      end
+    end
+
+    def delegate_runners(ability)
+      delegate_policies.values.compact.map do |p|
+        p.runner(ability)
+      end
+    end
+
+    desc "Always true"
+    condition :global_always_true do
+      true
+    end
+
+    desc "Always false"
+    condition :global_always_false do
+      false
     end
   end
 end
