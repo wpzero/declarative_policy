@@ -13,16 +13,16 @@ RSpec.describe DeclarativePolicy::Base do
     BasePolicy.own_conditions[:admin]
   end
 
-  let(:wp) do
+  let(:project_owner) do
     User.find_by_name("wp")
   end
 
-  let(:zkf) do
+  let(:issue_owner) do
     User.find_by_name("zkf")
   end
 
   let(:policy) do
-    DeclarativePolicy.policy_for(wp, declarative_policy_project)
+    DeclarativePolicy.policy_for(project_owner, declarative_policy_project)
   end
 
   let(:issue) do
@@ -30,11 +30,11 @@ RSpec.describe DeclarativePolicy::Base do
   end
 
   let(:issue_policy) do
-    DeclarativePolicy.policy_for(wp, issue)
+    DeclarativePolicy.policy_for(project_owner, issue)
   end
 
   let(:project_policy) do
-    DeclarativePolicy.policy_for(wp, declarative_policy_project)
+    DeclarativePolicy.policy_for(project_owner, declarative_policy_project)
   end
 
   context ".condition" do
@@ -70,7 +70,7 @@ RSpec.describe DeclarativePolicy::Base do
 
     context "execute and return fales" do
       let(:policy) do
-        DeclarativePolicy.policy_for(zkf, declarative_policy_project)
+        DeclarativePolicy.policy_for(issue_owner, declarative_policy_project)
       end
 
       it "success" do
@@ -180,21 +180,21 @@ RSpec.describe DeclarativePolicy::Base do
   end
 
   context ".can?" do
-    let(:issue_policy_with_zkf) do
-      DeclarativePolicy.policy_for(zkf, issue)
+    let(:issue_policy_with_issue_owner) do
+      DeclarativePolicy.policy_for(issue_owner, issue)
     end
 
     context "can delegate to other policy ability" do
       it "Works" do
         expect(issue_policy.can?(:edit_project)).to be_truthy
-        expect(issue_policy_with_zkf.can?(:edit_project)).to be_falsey
+        expect(issue_policy_with_issue_owner.can?(:edit_project)).to be_falsey
       end
     end
 
     context "can use policy self's ability setting" do
       it "Works" do
         expect(issue_policy.can?(:edit_issue)).to be_falsey
-        expect(issue_policy_with_zkf.can?(:edit_issue)).to be_truthy
+        expect(issue_policy_with_issue_owner.can?(:edit_issue)).to be_truthy
       end
     end
 
@@ -208,7 +208,7 @@ RSpec.describe DeclarativePolicy::Base do
     context "delegated condition" do
       it "Works" do
         expect(issue_policy.can?(:destroy_issue)).to be_truthy
-        expect(issue_policy_with_zkf.can?(:destroy_issue)).to be_truthy
+        expect(issue_policy_with_issue_owner.can?(:destroy_issue)).to be_truthy
       end
     end
 
@@ -228,7 +228,7 @@ RSpec.describe DeclarativePolicy::Base do
         expect(ability_step).to be_a(DeclarativePolicy::Step)
         expect(ability_step.rule).to be_a(DeclarativePolicy::Rule::Ability)
         expect(issue_policy.can?(:upload_image_from_issue)).to be_falsey
-        expect(issue_policy_with_zkf.can?(:upload_image_from_issue)).to be_truthy
+        expect(issue_policy_with_issue_owner.can?(:upload_image_from_issue)).to be_truthy
        end
     end
   end
